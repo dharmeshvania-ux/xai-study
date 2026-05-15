@@ -3,806 +3,508 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XAI Robo-Advisory Research Platform</title>
+<title>XAI Robo‑Advisory Study | Trust & Explanation</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;min-height:100vh}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f7fb;min-height:100vh;color:#1e293b;line-height:1.5}
+#app{max-width:640px;margin:0 auto;padding:32px 20px 48px}
+.card{background:#fff;border-radius:20px;padding:28px 24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.02);border:1px solid #e9eef2}
+h2{font-size:1.35rem;font-weight:700;letter-spacing:-0.3px;margin-bottom:4px}
+.muted{color:#64748b;font-size:0.9rem;margin-bottom:16px}
+.steps{display:flex;justify-content:center;gap:20px;margin-bottom:24px}
+.step-dot{display:flex;flex-direction:column;align-items:center;gap:4px}
+.step-circle{width:36px;height:36px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#64748b;transition:all 0.2s}
+.step-circle.active{background:#2563eb;color:#fff}
+.step-circle.done{background:#22c55e;color:#fff}
+.step-label{font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px}
+
+.btn-primary{width:100%;padding:14px;background:#0f172a;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:16px}
+.btn-primary:hover{background:#1e293b;transform:translateY(-1px);box-shadow:0 4px 8px rgba(0,0,0,0.1)}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{width:100%;padding:12px;background:#fff;color:#475569;border:1px solid #cbd5e1;border-radius:12px;font-size:0.9rem;cursor:pointer;margin-top:8px;transition:all 0.2s}
+.btn-secondary:hover{border-color:#2563eb;color:#2563eb}
+
+.alloc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.alloc-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:16px 8px;text-align:center}
+.alloc-pct{font-size:1.8rem;font-weight:800;color:#1e40af}
+.alloc-name{font-size:0.75rem;color:#64748b;margin-top:4px}
+.alloc-amt{font-size:0.8rem;color:#2563eb;font-weight:600;margin-top:6px}
+
+.factor-bar{margin-bottom:12px}
+.factor-header{display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.8rem;color:#475569}
+.factor-bar-bg{height:6px;background:#e2e8f0;border-radius:3px}
+.factor-bar-fill{height:100%;border-radius:3px;background:#2563eb;transition:width 0.4s}
+
+.chat-container{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-top:16px}
+.chat-header{padding:10px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;font-weight:600}
+.chat-messages{padding:16px;min-height:120px;max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;font-size:0.9rem}
+.msg{display:flex;gap:10px;max-width:85%}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0}
+.avatar.ai{background:#2563eb;color:#fff}
+.avatar.user{background:#e2e8f0;color:#475569}
+.bubble{padding:10px 14px;border-radius:12px;line-height:1.4}
+.bubble.ai{background:#eff6ff;color:#0f172a;border-bottom-left-radius:4px}
+.bubble.user{background:#0f172a;color:#fff;border-bottom-right-radius:4px}
+.quick-questions{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;border-top:1px solid #f1f5f9}
+.quick-q{padding:6px 12px;border-radius:20px;font-size:0.8rem;border:1px solid #cbd5e1;background:#fff;cursor:pointer;transition:all 0.15s;color:#334155}
+.quick-q:hover{background:#eff6ff;border-color:#2563eb;color:#2563eb}
+.chat-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #f1f5f9}
+.chat-input-row input{flex:1;border:1px solid #cbd5e1;border-radius:20px;padding:8px 16px;font-size:0.9rem;outline:none}
+.chat-input-row input:focus{border-color:#2563eb}
+.chat-send{width:36px;height:36px;border-radius:50%;background:#0f172a;color:#fff;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.typing-indicator{display:flex;gap:4px;align-items:center;padding:8px 14px;background:#eff6ff;border-radius:12px}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:#93c5fd;animation:typing 1s infinite}
+.typing-dot:nth-child(2){animation-delay:0.15s}.typing-dot:nth-child(3){animation-delay:0.3s}
+@keyframes typing{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+
+.allocation-row{border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:12px}
+.allocation-controls{display:flex;align-items:center;gap:10px}
+.amount-input{width:110px;padding:8px 8px 8px 24px;border:1px solid #cbd5e1;border-radius:10px;font-weight:700;text-align:right;font-size:1rem;color:#0f172a}
+.amount-input:focus{border-color:#2563eb;outline:none}
+.slider-bar{height:6px;background:#e2e8f0;border-radius:3px;margin-top:8px}
+.slider-fill{height:100%;background:#2563eb;border-radius:3px;transition:width 0.2s}
+
+.survey-item{margin-bottom:20px}
+.survey-item p{font-weight:600;margin-bottom:6px;font-size:0.9rem}
+.likert{display:flex;gap:8px;flex-wrap:wrap}
+.likert label{display:flex;align-items:center;gap:4px;background:#f8fafc;border:1px solid #e2e8f0;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:0.8rem;transition:all 0.15s}
+.likert label:hover{border-color:#2563eb}
+.likert input[type=radio]{accent-color:#2563eb}
+.mc-options{display:flex;flex-direction:column;gap:6px}
+.mc-options label{display:flex;align-items:center;gap:6px;font-size:0.9rem}
+
+.gears-btn{position:fixed;top:16px;right:16px;z-index:99;width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #cbd5e1;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:center}
 
 /* ── Researcher Panel ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100}
 .overlay.open{display:block}
 .panel{position:fixed;left:0;top:0;bottom:0;width:420px;background:#fff;z-index:101;overflow-y:auto;transform:translateX(-100%);transition:transform .3s;box-shadow:4px 0 24px rgba(0,0,0,0.12)}
 .panel.open{transform:translateX(0)}
-.ph{padding:18px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
-.ph h2{font-size:14px;font-weight:700;color:#222}
-.xbtn{width:28px;height:28px;border-radius:50%;border:1px solid #eee;background:#f9f9f9;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
-.ps{padding:14px 20px;border-bottom:1px solid #f5f5f5}
-.ps h3{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
-.cond-opt{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid #eee;cursor:pointer;margin-bottom:6px;transition:all .15s}
-.cond-opt.active{background:#eff6ff;border-color:#3b82f6}
-.cond-opt input{accent-color:#3b82f6;width:14px;height:14px}
-.cond-label{font-size:13px;color:#333}
-.cond-sub{font-size:11px;color:#aaa;margin-left:auto}
-.srow{margin-bottom:10px}
-.stop{display:flex;justify-content:space-between;margin-bottom:3px}
-.sname{font-size:12px;color:#555}
-.sval{font-size:12px;font-weight:700;color:#3b82f6;min-width:40px;text-align:right}
-input[type=range]{width:100%;accent-color:#3b82f6}
-.rec-prev{display:flex;gap:6px;margin-top:10px}
-.rc{flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:#eff6ff;border:1px solid #dbeafe}
-.rc-p{font-size:17px;font-weight:700;color:#1d4ed8}
-.rc-n{font-size:10px;color:#93c5fd;margin-top:1px}
-.rtotal{font-size:11px;text-align:center;margin-top:6px}
-.api-inp{width:100%;border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:12px;font-family:monospace;outline:none;transition:border-color .15s}
-.api-inp:focus{border-color:#3b82f6}
-.api-status{font-size:11px;margin-top:5px;padding:3px 8px;border-radius:10px;display:inline-block}
-.api-ok{background:#dcfce7;color:#166534}
-.api-no{background:#fee2e2;color:#991b1b}
-.r-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}
-.r-table th{background:#f5f5f5;padding:5px 7px;text-align:left;color:#888;font-weight:600}
-.r-table td{padding:5px 7px;border-bottom:1px solid #f5f5f5;color:#444}
-.r-table tr:last-child td{border:none}
-.exp-btn{width:100%;padding:9px;background:#222;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;margin-bottom:5px}
-.clr-btn{width:100%;padding:8px;background:#fff;color:#e11d48;border:1px solid #fecdd3;border-radius:8px;font-size:12px;cursor:pointer}
-.gear{position:fixed;top:14px;right:14px;z-index:50;width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid #e0e0e0;cursor:pointer;font-size:17px;box-shadow:0 2px 10px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;transition:transform .2s}
-.gear:hover{transform:rotate(45deg)}
-.pass-box{padding:20px}
-.pass-box p{font-size:13px;color:#666;margin-bottom:12px;line-height:1.5}
-.pass-box input{width:100%;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:14px;margin-bottom:10px;outline:none;transition:border-color .2s}
-.pass-box button{width:100%;padding:9px;background:#222;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px}
-.pass-hint{font-size:11px;color:#bbb;text-align:center;margin-top:8px}
-.profile-row{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-bottom:4px;background:#f9f9f9;border-radius:6px;font-size:11px}
-.profile-row .badge-qual{font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600}
-.badge-qual.good{background:#dcfce7;color:#166534}
-.badge-qual.bad{background:#fee2e2;color:#991b1b}
-
-/* ── App ── */
-#app{max-width:580px;margin:0 auto;padding:28px 16px 40px}
-.card{background:#fff;border-radius:16px;padding:22px;margin-bottom:14px;border:1px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
-.steps{display:flex;justify-content:center;gap:7px;margin-bottom:20px}
-.sd{width:8px;height:8px;border-radius:50%;background:#e5e5e5;transition:all .3s}
-.sd.active{background:#3b82f6;transform:scale(1.2)}
-.sd.done{background:#22c55e}
-
-/* Intro */
-.intro-icon{font-size:46px;text-align:center;margin-bottom:14px}
-.badges{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin:14px 0}
-.badge{padding:4px 12px;border-radius:20px;font-size:12px;background:#f0f4ff;color:#3b82f6;border:1px solid #dbeafe}
-
-/* Rec card */
-.alloc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.ac{background:#f8faff;border:1px solid #dbeafe;border-radius:12px;padding:14px 8px;text-align:center}
-.ac-pct{font-size:24px;font-weight:700;color:#1d4ed8}
-.ac-name{font-size:11px;color:#6b7280;margin-top:3px;line-height:1.3}
-.ac-amt{font-size:12px;color:#3b82f6;font-weight:600;margin-top:4px}
-.factors-section{border-top:1px solid #f0f0f0;padding-top:14px}
-.factors-label{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
-.fi{margin-bottom:10px}
-.fi-top{display:flex;justify-content:space-between;margin-bottom:4px}
-.fi-name{font-size:13px;color:#444}
-.fi-val{font-size:12px;color:#3b82f6;font-weight:600}
-.fi-bg{height:6px;background:#f0f0f0;border-radius:3px}
-.fi-fill{height:100%;border-radius:3px;background:#3b82f6;transition:width .4s}
-
-/* Chat */
-.chat-box{border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;margin-top:16px}
-.ch{padding:10px 14px;background:#f8faff;border-bottom:1px solid #eef2ff;display:flex;align-items:center;gap:8px}
-.cdot{width:7px;height:7px;border-radius:50%;background:#22c55e}
-.ctitle{font-size:13px;font-weight:600;color:#333}
-.cmsgs{padding:12px;min-height:100px;max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
-.cmsg{display:flex;gap:8px;max-width:90%}
-.cmsg.user{align-self:flex-end;flex-direction:row-reverse}
-.cav{width:26px;height:26px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cav.ai{background:#3b82f6;color:#fff}
-.cav.user{background:#eee;color:#666}
-.cbub{padding:8px 12px;border-radius:10px;font-size:13px;line-height:1.5}
-.cbub.ai{background:#eff6ff;color:#222;border-bottom-left-radius:3px}
-.cbub.user{background:#222;color:#fff;border-bottom-right-radius:3px}
-.typing-b{display:flex;gap:3px;align-items:center;padding:8px 12px;background:#eff6ff;border-radius:10px;border-bottom-left-radius:3px}
-.td{width:5px;height:5px;border-radius:50%;background:#93c5fd;animation:tp .9s infinite}
-.td:nth-child(2){animation-delay:.15s}.td:nth-child(3){animation-delay:.3s}
-@keyframes tp{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
-.sqs{padding:8px 12px;border-top:1px solid #f0f0f0;display:flex;flex-wrap:wrap;gap:5px}
-.sq{padding:4px 9px;border-radius:14px;font-size:12px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#555;transition:all .15s}
-.sq:hover{background:#eff6ff;border-color:#3b82f6;color:#3b82f6}
-.cinrow{padding:10px 12px;border-top:1px solid #f0f0f0;display:flex;gap:8px}
-.cinrow input{flex:1;border:1px solid #e0e0e0;border-radius:20px;padding:7px 14px;font-size:13px;outline:none;transition:border-color .15s}
-.cinrow input:focus{border-color:#3b82f6}
-.csend{width:32px;height:32px;border-radius:50%;background:#222;color:#fff;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
-.csend:disabled{opacity:.3;cursor:not-allowed}
-
-/* Allocation */
-.arow{border:1px solid #eee;border-radius:12px;padding:14px 16px;margin-bottom:10px;transition:border-color .2s,background .2s}
-.arow.over{border-color:#fca5a5;background:#fff5f5}
-.atop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.aname{font-size:14px;font-weight:600;color:#222}
-.aisug{font-size:11px;color:#3b82f6;background:#eff6ff;padding:3px 9px;border-radius:12px;border:1px solid #dbeafe}
-.acontrols{display:flex;align-items:center;gap:8px}
-.cbtn{width:34px;height:34px;border-radius:50%;border:1px solid #e5e5e5;background:#fafafa;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;color:#555;font-weight:300}
-.cbtn:hover{background:#eff6ff;border-color:#3b82f6;color:#3b82f6}
-.ainp-wrap{position:relative;display:flex;align-items:center}
-.ainp-sym{position:absolute;left:10px;font-size:13px;color:#888;pointer-events:none}
-.ainp{width:110px;padding:7px 10px 7px 22px;border:1px solid #ddd;border-radius:8px;font-size:15px;font-weight:700;color:#222;outline:none;text-align:right;transition:border-color .2s}
-.ainp:focus{border-color:#3b82f6}
-.abar-wrap{height:5px;background:#f0f0f0;border-radius:3px}
-.abar{height:100%;border-radius:3px;background:#3b82f6;transition:width .2s}
-.total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 4px 4px;border-top:1px solid #f0f0f0;margin-top:4px}
-.total-label{font-size:14px;color:#777}
-.total-num{font-size:20px;font-weight:700;transition:color .2s}
-.tok{color:#22c55e}.tover{color:#ef4444}.tunder{color:#f59e0b}
-.total-msg{font-size:12px;margin-top:2px;text-align:right}
-
-/* Buttons */
-.btnp{width:100%;padding:13px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;transition:opacity .2s;margin-top:10px}
-.btnp:hover{opacity:.85}
-.btnp:disabled{opacity:.3;cursor:not-allowed}
-.btno{width:100%;padding:11px;background:#fff;color:#666;border:1px solid #ddd;border-radius:12px;font-size:13px;cursor:pointer;margin-top:7px;transition:all .15s}
-.btno:hover{border-color:#3b82f6;color:#3b82f6}
-
-/* Done */
-.done-icon{font-size:54px;text-align:center;margin:6px 0 14px}
-.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}
-.sc{background:#f8faff;border-radius:10px;padding:12px 8px;text-align:center;border:1px solid #e0edff}
-.sc-amt{font-size:20px;font-weight:700;color:#1d4ed8}
-.sc-name{font-size:11px;color:#6b7280;margin-top:3px}
-.devbox{border-radius:10px;padding:12px 14px;font-size:13px;margin-top:10px;line-height:1.6}
-.devbox.perfect{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
-.devbox.partial{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+.panel .ph{padding:18px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.panel .xbtn{width:28px;height:28px;border-radius:50%;border:1px solid #eee;background:#f9f9f9;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+.panel .ps{padding:14px 20px;border-bottom:1px solid #f5f5f5}
+.panel h3{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+.panel select{width:100%;padding:6px;border-radius:6px;border:1px solid #ddd}
+.panel .exp-btn{width:100%;padding:9px;background:#222;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;margin-bottom:5px}
+.panel .clr-btn{width:100%;padding:8px;background:#fff;color:#e11d48;border:1px solid #fecdd3;border-radius:8px;font-size:12px;cursor:pointer}
+.panel .profile-row{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-bottom:4px;background:#f9f9f9;border-radius:6px;font-size:11px}
+.badge-qual.good{background:#dcfce7;color:#166534;font-size:10px;padding:2px 6px;border-radius:8px}
+.badge-qual.bad{background:#fee2e2;color:#991b1b;font-size:10px;padding:2px 6px;border-radius:8px}
 </style>
 </head>
 <body>
 
-<button class="gear" onclick="openPanel()" title="Researcher Settings">⚙️</button>
+<button class="gears-btn" onclick="openPanel()" title="Researcher Panel">⚙️</button>
 <div class="overlay" id="overlay" onclick="closePanel()"></div>
 <div class="panel" id="panel"><div id="panel-body"></div></div>
 <div id="app"></div>
 
 <script>
-// ─── CONFIG & STATE ─────────────────────────────────────────────────────────
-// Default profiles for good/bad recommendations (stored in localStorage)
+// ─── CONFIG & STATE ──────────────────────────────────────────────────────
+const API_KEY = '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'; // Hardcoded – not editable via UI
+const PANEL_PASSWORD = 'Fr@nz1883';
+
 const DEFAULT_PROFILES = [
-  { id: 'good_moderate', quality: 'good', rec: { equity: 50, bonds: 40, gold: 10 },
-    factors: { risk: 60, horizon: 80, income: 75, volatility: 50 },
-    description: 'Moderate risk – matches profile' },
-  { id: 'good_conservative', quality: 'good', rec: { equity: 25, bonds: 60, gold: 15 },
-    factors: { risk: 40, horizon: 60, income: 80, volatility: 30 },
-    description: 'Conservative – matches risk-averse profile' },
-  { id: 'bad_aggressive', quality: 'bad', rec: { equity: 90, bonds: 5, gold: 5 },
-    factors: { risk: 20, horizon: 30, income: 30, volatility: 90 },
-    description: 'Overly aggressive – mismatched' },
-  { id: 'bad_ultra_safe', quality: 'bad', rec: { equity: 5, bonds: 90, gold: 5 },
-    factors: { risk: 85, horizon: 20, income: 40, volatility: 10 },
-    description: 'Too safe – extreme mismatch' }
+  { id:'good_moderate', quality:'good', rec:{equity:50,bonds:40,gold:10},
+    factors:{risk:60,income:75,volatility:50}, horizonYears:8, desc:'Moderate, well-aligned' },
+  { id:'good_conservative', quality:'good', rec:{equity:25,bonds:60,gold:15},
+    factors:{risk:40,income:80,volatility:30}, horizonYears:6, desc:'Conservative, well-aligned' },
+  { id:'bad_aggressive', quality:'bad', rec:{equity:90,bonds:5,gold:5},
+    factors:{risk:20,income:30,volatility:90}, horizonYears:3, desc:'Overly aggressive, mismatched' },
+  { id:'bad_ultrasafe', quality:'bad', rec:{equity:5,bonds:90,gold:5},
+    factors:{risk:85,income:40,volatility:10}, horizonYears:20, desc:'Too safe, extreme mismatch' }
 ];
 
-// Load profiles from storage or fallback to defaults
-function loadProfiles() {
-  let stored = localStorage.getItem('xai_profiles');
-  if (stored) {
-    try { return JSON.parse(stored); } catch(e) {}
-  }
-  return DEFAULT_PROFILES;
+function updateHorizonScore(profile) {
+  profile.factors.horizon = Math.min(100, profile.horizonYears * 10);
 }
-function saveProfiles(profiles) {
-  localStorage.setItem('xai_profiles', JSON.stringify(profiles));
-}
+DEFAULT_PROFILES.forEach(updateHorizonScore);
 
-let profiles = loadProfiles();
+let profiles = JSON.parse(localStorage.getItem('xai_profiles')) || DEFAULT_PROFILES;
+profiles.forEach(updateHorizonScore);
 
-// Session state (reset each participant)
-let sess = {
-  step: 'intro',
-  condition: null,        // 'control', 'feature', 'dialogic'
-  profile: null,          // randomly chosen profile object
-  rec: null,              // copy of profile.rec
-  factors: null,          // copy of profile.factors
-  recQuality: null,       // 'good' or 'bad'
-  profileId: null,
-  chat: [],
-  qCount: 0,
-  t0: null,
-  tAlloc: null,
-  alloc: { equity: 0, bonds: 0, gold: 0 },
-  devData: null,
-  apiKey: ''              // stored per session (also in localStorage for convenience)
+let cfg = JSON.parse(localStorage.getItem('xai_cfg')) || {
+  overrideCondition:'random',
+  profilePool:'all'
 };
+// Ignore any apiKey stored in cfg; we'll always use the hardcoded API_KEY
 
-// Global config (researcher overrides) – stored in localStorage
-let cfg = JSON.parse(localStorage.getItem('xai_cfg') || '{}');
-if (!cfg.apiKey) cfg.apiKey = '';
-if (!cfg.overrideCondition) cfg.overrideCondition = 'random'; // 'random', 'control', 'feature', 'dialogic'
-if (!cfg.profilePool) cfg.profilePool = 'all'; // 'all', 'good', 'bad', or specific id
-
-// Responses array
-let responses = JSON.parse(localStorage.getItem('xai_resp') || '[]');
+let responses = JSON.parse(localStorage.getItem('xai_resp')) || [];
 let auth = false;
 
-const saveCfg = () => localStorage.setItem('xai_cfg', JSON.stringify(cfg));
-const saveResp = () => localStorage.setItem('xai_resp', JSON.stringify(responses));
+// Session state
+let sess = {
+  step:'intro', participantId:'', condition:null, profile:null, rec:null, factors:null,
+  recQuality:null, profileId:null, horizonYears:null,
+  chat:[], qCount:0, t0:null, tAlloc:null,
+  alloc:{equity:0,bonds:0,gold:0}, surveyData:null
+};
 
-// ─── HELPER: AI recommended amounts based on current session rec ───────────
-const aiAmt = (k) => Math.round((sess.rec?.[k] || 0) / 100 * 10000);
+function saveCfg(){ localStorage.setItem('xai_cfg', JSON.stringify(cfg)); }
+function saveResp(){ localStorage.setItem('xai_resp', JSON.stringify(responses)); }
+function saveProfilesToStorage(){ localStorage.setItem('xai_profiles', JSON.stringify(profiles)); }
 
-// ─── RANDOM ASSIGNMENT ─────────────────────────────────────────────────────
-function assignParticipant() {
-  // Determine condition
-  let cond = cfg.overrideCondition;
-  if (!cond || cond === 'random') {
-    const conds = ['control', 'feature', 'dialogic'];
-    cond = conds[Math.floor(Math.random() * conds.length)];
-  }
+function aiAmt(k){ return Math.round((sess.rec?.[k]||0)/100*10000); }
+
+function assignParticipant(){
+  sess.participantId = 'P'+Math.random().toString(36).substring(2,10).toUpperCase();
+  let cond = cfg.overrideCondition==='random'
+    ? ['control','feature','dialogic'][Math.floor(Math.random()*3)]
+    : cfg.overrideCondition;
   sess.condition = cond;
 
-  // Pick a profile based on pool setting
   let pool = profiles;
-  if (cfg.profilePool === 'good') pool = profiles.filter(p => p.quality === 'good');
-  else if (cfg.profilePool === 'bad') pool = profiles.filter(p => p.quality === 'bad');
-  else if (cfg.profilePool && cfg.profilePool !== 'all') {
-    // assume specific id
-    const found = profiles.find(p => p.id === cfg.profilePool);
-    if (found) pool = [found];
+  if(cfg.profilePool==='good') pool = profiles.filter(p=>p.quality==='good');
+  else if(cfg.profilePool==='bad') pool = profiles.filter(p=>p.quality==='bad');
+  else if(cfg.profilePool!=='all') {
+    let found = profiles.find(p=>p.id===cfg.profilePool);
+    if(found) pool=[found];
   }
-  if (!pool.length) pool = profiles; // fallback
-  const chosen = pool[Math.floor(Math.random() * pool.length)];
-
+  const chosen = pool[Math.floor(Math.random()*pool.length)];
   sess.profile = chosen;
   sess.profileId = chosen.id;
   sess.recQuality = chosen.quality;
-  sess.rec = { ...chosen.rec };
-  sess.factors = { ...chosen.factors };
+  sess.rec = {...chosen.rec};
+  sess.factors = {...chosen.factors};
+  sess.horizonYears = chosen.horizonYears;
 }
 
-// URL parameter overrides (for manual testing)
-function applyUrlParams() {
+function applyUrlParams(){
   const url = new URLSearchParams(window.location.search);
   const cond = url.get('cond');
-  if (cond && ['control','feature','dialogic'].includes(cond)) {
-    cfg.overrideCondition = cond; // force for this session
-    sess.condition = cond;
+  if(cond && ['control','feature','dialogic'].includes(cond)){
+    cfg.overrideCondition = cond;
   }
   const profId = url.get('profile');
-  if (profId) {
-    const p = profiles.find(x => x.id === profId);
-    if (p) {
+  if(profId){
+    const p = profiles.find(x=>x.id===profId);
+    if(p){
       sess.profile = p;
       sess.profileId = p.id;
       sess.recQuality = p.quality;
-      sess.rec = { ...p.rec };
-      sess.factors = { ...p.factors };
+      sess.rec = {...p.rec};
+      sess.factors = {...p.factors};
+      sess.horizonYears = p.horizonYears;
+      sess.condition = cond || 'control';
     }
   }
 }
 
-// ─── PANEL MANAGEMENT ──────────────────────────────────────────────────────
-function openPanel() {
-  document.getElementById('panel').classList.add('open');
-  document.getElementById('overlay').classList.add('open');
-  renderPanel();
-}
-function closePanel() {
-  document.getElementById('panel').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
+// ─── UI RENDERING ─────────────────────────────────────────────────────────
+function renderApp(){
+  const app = document.getElementById('app');
+  if(sess.step==='intro') app.innerHTML = introHTML();
+  else if(sess.step==='rec') app.innerHTML = recHTML();
+  else if(sess.step==='alloc') app.innerHTML = allocHTML();
+  else if(sess.step==='survey') app.innerHTML = surveyHTML();
+  else if(sess.step==='done') app.innerHTML = doneHTML();
+  if(sess.step==='alloc') updateAllocUI();
+  if(sess.step==='rec' && sess.condition==='dialogic') document.getElementById('cinp')?.focus();
 }
 
-function renderPanel() {
+const dots = (active) => {
+  let html = '<div class="steps">';
+  ['Intro','Recommendation','Allocation','Survey','Done'].forEach((l,i)=>{
+    let cls = i<active?'done':i===active?'active':'';
+    html += `<div class="step-dot"><div class="step-circle ${cls}">${i<active?'✓':i+1}</div><span class="step-label">${l}</span></div>`;
+  });
+  return html+'</div>';
+};
+
+function introHTML(){ return `
+  <div class="card">${dots(0)}<div style="text-align:center;font-size:2.5rem;margin:16px 0">📊</div>
+  <h2 style="text-align:center">Investment Decision Study</h2>
+  <p class="muted" style="text-align:center">You'll see an AI recommendation and decide how to invest ₹10,000.<br>Then complete a short survey.</p>
+  <button class="btn-primary" onclick="startStudy()">Begin →</button></div>`; }
+
+function startStudy(){
+  if(!sess.condition) assignParticipant();
+  applyUrlParams();
+  if(!sess.condition) assignParticipant();
+  sess.step='rec'; sess.t0=Date.now(); sess.chat=[]; sess.qCount=0; renderApp();
+}
+
+function recHTML(){
+  const r = sess.rec;
+  const horizonDisplay = sess.horizonYears + ' year' + (sess.horizonYears!==1?'s':'');
+  let html = `<div class="card">${dots(1)}<h2>AI Portfolio Recommendation</h2>
+  <p class="muted">Based on your profile: moderate risk, ${horizonDisplay} horizon.</p>
+  <div class="alloc-grid">
+    ${['equity','bonds','gold'].map(k=>`<div class="alloc-card"><div class="alloc-pct">${r[k]}%</div><div class="alloc-name">${k==='equity'?'Large-cap Equity':k==='bonds'?'Debt/Bonds':'Gold/Alt.'}</div><div class="alloc-amt">₹${aiAmt(k).toLocaleString()}</div></div>`).join('')}
+  </div>`;
+  if(sess.condition!=='control'){
+    const factorRows = [
+      ['risk','Risk Tolerance', sess.factors.risk, '/ 100'],
+      ['horizon','Investment Horizon', sess.horizonYears, ' years'],
+      ['income','Income Stability', sess.factors.income, '/ 100'],
+      ['volatility','Market Volatility', sess.factors.volatility, '/ 100']
+    ];
+    html+=`<div style="border-top:1px solid #e2e8f0;padding-top:16px;margin-top:8px"><h3 style="font-size:0.8rem;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Key Decision Factors</h3>`;
+    for(let [k,label,val,unit] of factorRows){
+      let width = k==='horizon' ? (sess.horizonYears*10) : val;
+      html+=`<div class="factor-bar"><div class="factor-header"><span>${label}</span><span>${val} ${unit}</span></div><div class="factor-bar-bg"><div class="factor-bar-fill" style="width:${Math.min(100,width)}%"></div></div></div>`;
+    }
+    html+=`</div>`;
+  }
+  if(sess.condition==='dialogic'){
+    html+=`<div class="chat-container"><div class="chat-header"><span>💬 AI Assistant</span></div>
+    <div class="chat-messages" id="cmsgs"><div class="msg"><div class="avatar ai">AI</div><div class="bubble ai">Hi! I can explain why this portfolio was recommended. What would you like to know?</div></div></div>
+    <div class="quick-questions">${['Why this equity?','What about gold?','How was risk assessed?','What if markets fall?'].map(q=>`<button class="quick-q" onclick="sendQuick('${q}')">${q}</button>`).join('')}</div>
+    <div class="chat-input-row"><input id="cinp" placeholder="Ask about this recommendation…" onkeydown="if(event.key==='Enter')sendChat()"><button class="chat-send" id="csend" onclick="sendChat()">↑</button></div></div>`;
+  }
+  html+=`<button class="btn-primary" onclick="goAlloc()">Proceed to Allocation →</button></div>`;
+  return html;
+}
+
+async function sendQuick(q){ document.getElementById('cinp').value = q; sendChat(); }
+async function sendChat(){
+  // Using hardcoded API_KEY, no need to check cfg
+  if(!API_KEY.startsWith('gsk_')){ alert('API key missing. Hardcoded key may be invalid.'); return; }
+  const inp = document.getElementById('cinp'), send = document.getElementById('csend');
+  const text = inp.value.trim(); if(!text) return;
+  inp.value=''; inp.disabled=true; send.disabled=true; sess.qCount++;
+  sess.chat.push({role:'user',content:text});
+  const msgs = document.getElementById('cmsgs');
+  msgs.innerHTML += `<div class="msg user"><div class="avatar user">You</div><div class="bubble user">${text}</div></div>`;
+  msgs.innerHTML += `<div id="typ"><div class="msg"><div class="avatar ai">AI</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+  const sys = `You are an explanation assistant. ONLY explain why this specific portfolio (${sess.rec.equity}% equity, ${sess.rec.bonds}% bonds, ${sess.rec.gold}% gold) was recommended. NEVER suggest changes or alternatives. If asked for alternatives say "I can only explain this recommendation." Keep answers 2-3 sentences.`;
+  try{
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${API_KEY}`},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:200,messages:[{role:'system',content:sys},...sess.chat]})
+    });
+    const data = await res.json();
+    const reply = data.error ? `Error: ${data.error.message}` : (data.choices?.[0]?.message?.content||'No response.');
+    sess.chat.push({role:'assistant',content:reply});
+    document.getElementById('typ')?.remove();
+    msgs.innerHTML += `<div class="msg"><div class="avatar ai">AI</div><div class="bubble ai">${reply}</div></div>`;
+  }catch(e){ document.getElementById('typ')?.remove(); msgs.innerHTML += `<div class="msg"><div class="avatar ai">AI</div><div class="bubble ai">Network error.</div></div>`; }
+  inp.disabled=false; send.disabled=false; msgs.scrollTop=msgs.scrollHeight; inp.focus();
+}
+
+function goAlloc(){
+  sess.alloc = { equity:aiAmt('equity'), bonds:aiAmt('bonds'), gold:aiAmt('gold') };
+  let sum = sess.alloc.equity+sess.alloc.bonds+sess.alloc.gold;
+  sess.alloc.equity += (10000-sum);
+  sess.tAlloc = Date.now(); sess.step='alloc'; renderApp();
+}
+
+function allocHTML(){
+  return `<div class="card">${dots(2)}<h2>Allocate ₹10,000</h2><p class="muted">Distribute across assets. AI recommendation shown as guide.</p>
+  ${['equity','bonds','gold'].map(k=>`<div class="allocation-row"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600">${k==='equity'?'📈 Large-cap Equity':k==='bonds'?'🏛️ Debt/Bonds':'🥇 Gold/Alternatives'}</span><span style="font-size:0.8rem;color:#2563eb">AI: ₹${aiAmt(k).toLocaleString()}</span></div>
+  <div class="allocation-controls"><button class="btn-secondary" style="width:auto;padding:8px 12px" onclick="adj('${k}',-500)">-500</button><input class="amount-input" id="inp_${k}" value="${sess.alloc[k]}" oninput="setVal('${k}',+this.value)"><button class="btn-secondary" style="width:auto;padding:8px 12px" onclick="adj('${k}',500)">+500</button></div>
+  <div class="slider-bar"><div class="slider-fill" id="bar_${k}" style="width:${sess.alloc[k]/100}%"></div></div></div>`).join('')}
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span>Total</span><span style="font-size:1.3rem;font-weight:700" id="tnum">₹0</span></div>
+  <div id="tmsg" style="font-size:0.8rem"></div>
+  <button class="btn-secondary" onclick="resetAlloc()">↺ Reset to AI</button>
+  <button class="btn-primary" id="sbtn" onclick="submitAlloc()" disabled>Submit Allocation</button></div>`;
+}
+
+function adj(k,d){ setVal(k, Math.max(0,Math.min(10000, sess.alloc[k]+d))); }
+function setVal(k,v){ v=Math.max(0,Math.min(10000,Math.round(v/100)*100)); if(isNaN(v)) v=0;
+  sess.alloc[k]=v; document.getElementById('inp_'+k).value=v; document.getElementById('bar_'+k).style.width=(v/100)+'%'; updateAllocUI(); }
+function updateAllocUI(){
+  let t=sess.alloc.equity+sess.alloc.bonds+sess.alloc.gold;
+  document.getElementById('tnum').textContent='₹'+t.toLocaleString();
+  document.getElementById('tnum').style.color=t===10000?'#22c55e':t>10000?'#ef4444':'#f59e0b';
+  document.getElementById('tmsg').textContent=t===10000?'✓ Ready':t>10000?`₹${t-10000} over`:`₹${10000-t} remaining`;
+  document.getElementById('sbtn').disabled = t!==10000;
+}
+function resetAlloc(){ sess.alloc={equity:aiAmt('equity'),bonds:aiAmt('bonds'),gold:aiAmt('gold')}; let s=sess.alloc.equity+sess.alloc.bonds+sess.alloc.gold; sess.alloc.equity+=(10000-s);
+  ['equity','bonds','gold'].forEach(k=>{ document.getElementById('inp_'+k).value=sess.alloc[k]; document.getElementById('bar_'+k).style.width=(sess.alloc[k]/100)+'%'; }); updateAllocUI(); }
+
+function submitAlloc(){
+  sess.step='survey'; sess.surveyData={}; renderApp();
+}
+
+// ─── SURVEY ────────────────────────────────────────────────────────────────
+function surveyHTML(){
+  return `<div class="card">${dots(3)}<h2>Short Survey</h2><p class="muted">Please rate the following statements.</p>
+  <form id="surveyForm" onsubmit="event.preventDefault(); submitSurvey()">
+    <div class="survey-item"><p>Trust in AI Robo‑advisor (1=Strongly Disagree, 5=Strongly Agree)</p>
+      ${['The AI robo-advisor is dependable.','The AI robo-advisor is reliable.','I am confident in the AI robo-advisor.','The AI robo-advisor provides security.','The AI robo-advisor is trustworthy.','The AI robo-advisor behaves consistently.','The AI robo-advisor meets my expectations.','The AI robo-advisor performs well under varying conditions.','The AI robo-advisor communicates clearly.','The AI robo-advisor is competent.','The AI robo-advisor provides adequate feedback.','The AI robo-advisor is helpful.'].map((q,i)=>`<div style="margin-bottom:10px"><span style="font-size:0.85rem">${q}</span><div class="likert">${[1,2,3,4,5].map(v=>`<label><input type="radio" name="trust${i}" value="${v}" required>${v}</label>`).join('')}</div></div>`).join('')}
+    </div>
+    <div class="survey-item"><p>Perceived Usefulness (1-5)</p>
+      ${['Using the AI improves my decision quality.','The AI makes me more effective in investing.','The AI increases my productivity.','I find the AI useful for my investment decisions.'].map((q,i)=>`<div style="margin-bottom:10px"><span style="font-size:0.85rem">${q}</span><div class="likert">${[1,2,3,4,5].map(v=>`<label><input type="radio" name="useful${i}" value="${v}" required>${v}</label>`).join('')}</div></div>`).join('')}
+    </div>
+    <div class="survey-item"><p>Ease of Use (1-5)</p>
+      ${['My interaction with the AI was clear and understandable.','I found the AI easy to use.','Learning to interact with the AI was easy.','It was easy to get the AI to do what I wanted.'].map((q,i)=>`<div style="margin-bottom:10px"><span style="font-size:0.85rem">${q}</span><div class="likert">${[1,2,3,4,5].map(v=>`<label><input type="radio" name="ease${i}" value="${v}" required>${v}</label>`).join('')}</div></div>`).join('')}
+    </div>
+    <div class="survey-item"><p>Financial Literacy</p>
+      <div style="margin-bottom:12px"><span>1. ₹100 savings account, 2% interest/year. After 5 years: </span>
+        <div class="mc-options"><label><input type="radio" name="fin1" value="more" required> More than ₹102</label><label><input type="radio" name="fin1" value="exact"> Exactly ₹102</label><label><input type="radio" name="fin1" value="less"> Less than ₹102</label></div></div>
+      <div style="margin-bottom:12px"><span>2. Interest 1%, inflation 2%. After 1 year, can buy: </span>
+        <div class="mc-options"><label><input type="radio" name="fin2" value="more" required> More than today</label><label><input type="radio" name="fin2" value="same"> Same</label><label><input type="radio" name="fin2" value="less"> Less than today</label></div></div>
+      <div><span>3. Single company stock usually safer than mutual fund. </span>
+        <div class="mc-options"><label><input type="radio" name="fin3" value="true" required> True</label><label><input type="radio" name="fin3" value="false"> False</label></div></div>
+    </div>
+    <div class="survey-item"><p>Digital Literacy (1-5)</p>
+      ${['I feel confident using digital tools.','I can learn new digital technologies easily.','I keep up with important digital technologies.','I have the skills needed to use digital platforms.'].map((q,i)=>`<div style="margin-bottom:10px"><span style="font-size:0.85rem">${q}</span><div class="likert">${[1,2,3,4,5].map(v=>`<label><input type="radio" name="dig${i}" value="${v}" required>${v}</label>`).join('')}</div></div>`).join('')}
+    </div>
+    <button class="btn-primary" type="submit">Submit Survey</button></form></div>`;
+}
+
+function submitSurvey(){
+  const form = document.getElementById('surveyForm');
+  if(!form.checkValidity()){ form.reportValidity(); return; }
+  const data = { trust:[], usefulness:[], ease:[], finLit:[], digLit:[] };
+  for(let i=0;i<12;i++) data.trust.push(+form['trust'+i].value);
+  for(let i=0;i<4;i++) data.usefulness.push(+form['useful'+i].value);
+  for(let i=0;i<4;i++) data.ease.push(+form['ease'+i].value);
+  data.finLit.push(form.fin1.value, form.fin2.value, form.fin3.value);
+  for(let i=0;i<4;i++) data.digLit.push(+form['dig'+i].value);
+  sess.surveyData = data;
+  const alloc = sess.alloc;
+  const dev = Math.round((Math.abs(alloc.equity-aiAmt('equity'))+Math.abs(alloc.bonds-aiAmt('bonds'))+Math.abs(alloc.gold-aiAmt('gold')))/10000*100);
+  const record = {
+    participantId: sess.participantId,
+    timestamp: new Date().toISOString(),
+    condition: sess.condition,
+    rec_quality: sess.recQuality,
+    profile_id: sess.profileId,
+    horizon_years: sess.horizonYears,
+    equity: alloc.equity, bonds: alloc.bonds, gold: alloc.gold,
+    ai_equity: aiAmt('equity'), ai_bonds: aiAmt('bonds'), ai_gold: aiAmt('gold'),
+    deviation: dev,
+    questions: sess.qCount,
+    rec_view_sec: Math.round((sess.tAlloc - sess.t0)/1000),
+    alloc_sec: Math.round((Date.now() - sess.tAlloc)/1000),
+    trust: data.trust,
+    usefulness: data.usefulness,
+    ease: data.ease,
+    finLit: data.finLit,
+    digLit: data.digLit
+  };
+  responses.push(record); saveResp();
+  sess.step='done'; renderApp();
+}
+
+function doneHTML(){
+  return `<div class="card" style="text-align:center">${dots(4)}<div style="font-size:3rem">✅</div>
+  <h2>Thank You</h2><p class="muted">Your responses have been recorded.</p>
+  <button class="btn-secondary" onclick="restart()">Start New Participant</button></div>`;
+}
+function restart(){ sess = {step:'intro',participantId:'',condition:null,profile:null,rec:null,factors:null,recQuality:null,profileId:null,horizonYears:null,chat:[],qCount:0,t0:null,tAlloc:null,alloc:{equity:0,bonds:0,gold:0},surveyData:null}; renderApp(); }
+
+// ─── RESEARCHER PANEL (no API key section, no password hint) ────────────
+function openPanel(){ document.getElementById('panel').classList.add('open'); document.getElementById('overlay').classList.add('open'); renderPanel(); }
+function closePanel(){ document.getElementById('panel').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+
+function renderPanel(){
   const el = document.getElementById('panel-body');
-  if (!auth) {
+  if(!auth){
     el.innerHTML = `
       <div class="ph"><h2>⚙️ Researcher Panel</h2><button class="xbtn" onclick="closePanel()">✕</button></div>
-      <div class="pass-box">
-        <p>This panel controls the experiment settings. Enter the researcher password to continue.</p>
-        <input type="password" id="pi" placeholder="Password" onkeydown="if(event.key==='Enter')chkPass()">
-        <button onclick="chkPass()">Unlock Panel</button>
-        <p class="pass-hint">Default password: <code>admin</code></p>
+      <div style="padding:20px">
+        <p style="font-size:13px;color:#666;margin-bottom:12px">Enter the researcher password to continue.</p>
+        <input type="password" id="pi" placeholder="Password" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px" onkeydown="if(event.key==='Enter')checkPassword()">
+        <button onclick="checkPassword()" style="width:100%;padding:9px;background:#222;color:#fff;border:none;border-radius:8px">Unlock</button>
+        <!-- No password hint -->
       </div>`;
     return;
   }
 
-  const poolLabel = cfg.profilePool === 'all' ? 'All profiles' : cfg.profilePool === 'good' ? 'Good only' : cfg.profilePool === 'bad' ? 'Bad only' : `Profile: ${cfg.profilePool}`;
-
   el.innerHTML = `
     <div class="ph"><h2>⚙️ Researcher Panel</h2><button class="xbtn" onclick="closePanel()">✕</button></div>
-
-    <!-- Override condition -->
     <div class="ps">
-      <h3>Force Condition (for this session)</h3>
-      <select style="width:100%;padding:6px;border-radius:6px;border:1px solid #ddd;" onchange="cfg.overrideCondition=this.value;saveCfg();">
+      <h3>Force Condition</h3>
+      <select onchange="cfg.overrideCondition=this.value;saveCfg();">
         <option value="random" ${cfg.overrideCondition==='random'?'selected':''}>Random (balanced)</option>
         <option value="control" ${cfg.overrideCondition==='control'?'selected':''}>Black-box (Control)</option>
         <option value="feature" ${cfg.overrideCondition==='feature'?'selected':''}>Feature-based XAI</option>
         <option value="dialogic" ${cfg.overrideCondition==='dialogic'?'selected':''}>Dialogic XAI</option>
       </select>
-      <small style="color:#888;">Reload page or start new participant to apply.</small>
     </div>
-
-    <!-- Profile pool -->
     <div class="ps">
-      <h3>Profile Selection Pool</h3>
-      <select style="width:100%;padding:6px;border-radius:6px;border:1px solid #ddd;" onchange="cfg.profilePool=this.value;saveCfg();">
+      <h3>Profile Pool</h3>
+      <select onchange="cfg.profilePool=this.value;saveCfg();">
         <option value="all" ${cfg.profilePool==='all'?'selected':''}>All profiles</option>
-        <option value="good" ${cfg.profilePool==='good'?'selected':''}>Only GOOD recommendations</option>
-        <option value="bad" ${cfg.profilePool==='bad'?'selected':''}>Only BAD recommendations</option>
-        ${profiles.map(p => `<option value="${p.id}" ${cfg.profilePool===p.id?'selected':''}>${p.id} (${p.quality})</option>`).join('')}
+        <option value="good" ${cfg.profilePool==='good'?'selected':''}>Good only</option>
+        <option value="bad" ${cfg.profilePool==='bad'?'selected':''}>Bad only</option>
+        ${profiles.map(p=>`<option value="${p.id}" ${cfg.profilePool===p.id?'selected':''}>${p.id} (${p.quality})</option>`).join('')}
       </select>
     </div>
-
-    <!-- Profile management -->
     <div class="ps">
-      <h3>Recommendation Profiles (Good / Bad)</h3>
-      <div id="profile-list">${profiles.map(p => `
-        <div class="profile-row">
-          <span class="badge-qual ${p.quality}">${p.quality}</span>
-          <strong>${p.id}</strong> (E:${p.rec.equity}% B:${p.rec.bonds}% G:${p.rec.gold}%)
-          <span style="margin-left:auto;display:flex;gap:4px;">
-            <button style="padding:2px 8px;font-size:10px;" onclick="editProfile('${p.id}')">✎</button>
-            <button style="padding:2px 8px;font-size:10px;" onclick="deleteProfile('${p.id}')">✕</button>
-          </span>
-        </div>`).join('')}</div>
-      <button class="exp-btn" style="margin-top:6px;" onclick="addProfile()">+ Add Profile</button>
+      <h3>Profiles (Horizon in years)</h3>
+      ${profiles.map(p=>`<div class="profile-row"><span class="badge-qual ${p.quality}">${p.quality}</span><strong>${p.id}</strong> (E:${p.rec.equity}% B:${p.rec.bonds}% G:${p.rec.gold}%) | ${p.horizonYears}yr <span style="margin-left:auto"><button onclick="editProfile('${p.id}')">✎</button> <button onclick="deleteProfile('${p.id}')">✕</button></span></div>`).join('')}
+      <button class="exp-btn" style="margin-top:8px" onclick="addProfile()">+ Add Profile</button>
     </div>
-
-    <!-- API Key (dialogic only, but shown always) -->
+    <!-- API key section completely removed -->
     <div class="ps">
-      <h3>Groq API Key</h3>
-      <input class="api-inp" type="password" placeholder="gsk_..." value="${cfg.apiKey}"
-        oninput="cfg.apiKey=this.value;saveCfg();">
-      <span class="api-status ${cfg.apiKey.startsWith('gsk_')?'api-ok':'api-no'}" id="api-st">
-        ${cfg.apiKey.startsWith('gsk_')?'Key set ✓':'Not set — get free key at console.groq.com'}
-      </span>
-    </div>
-
-    <!-- Results -->
-    <div class="ps">
-      <h3>Results (${responses.length} responses)</h3>
-      ${responses.length === 0
-        ? '<p style="font-size:12px;color:#bbb;padding:4px 0">No responses yet.</p>'
-        : `<div style="overflow-x:auto"><table class="r-table">
-            <thead><tr><th>#</th><th>Cond</th><th>Quality</th><th>E</th><th>B</th><th>G</th><th>Dev%</th><th>Qs</th></tr></thead>
-            <tbody>${responses.map((r,i)=>`
-              <tr>
-                <td>${i+1}</td>
-                <td style="text-transform:capitalize">${r.condition.substring(0,4)}.</td>
-                <td><span class="badge-qual ${r.rec_quality}">${r.rec_quality}</span></td>
-                <td>₹${r.equity.toLocaleString()}</td>
-                <td>₹${r.bonds.toLocaleString()}</td>
-                <td>₹${r.gold.toLocaleString()}</td>
-                <td>${r.deviation}%</td>
-                <td>${r.questions}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table></div>`}
+      <h3>Results (${responses.length})</h3>
+      ${responses.length ? `<table class="r-table"><tr><th>#</th><th>Cond</th><th>Quality</th><th>E</th><th>B</th><th>G</th><th>Dev%</th><th>Q's</th><th>Horizon</th></tr>${responses.map((r,i)=>`<tr><td>${i+1}</td><td>${r.condition.substring(0,4)}.</td><td><span class="badge-qual ${r.rec_quality}">${r.rec_quality}</span></td><td>₹${r.equity}</td><td>₹${r.bonds}</td><td>₹${r.gold}</td><td>${r.deviation}%</td><td>${r.questions}</td><td>${r.horizon_years}yr</td></tr>`).join('')}</table>` : '<p style="font-size:12px;color:#bbb">No responses yet.</p>'}
       <button class="exp-btn" onclick="exportCSV()">⬇ Export CSV</button>
       <button class="clr-btn" onclick="clearData()">Clear all responses</button>
     </div>`;
 }
 
-function chkPass() {
-  const v = document.getElementById('pi').value;
-  if (v === 'admin') { auth = true; renderPanel(); }
-  else {
-    document.getElementById('pi').style.borderColor = '#ef4444';
-    document.getElementById('pi').placeholder = 'Wrong password';
-    document.getElementById('pi').value = '';
-  }
-}
-
-// Profile CRUD (simplified – just prompts, you can enhance later)
-function addProfile() {
-  const id = prompt('Profile ID (unique):');
-  if (!id) return;
-  const quality = prompt('Quality (good/bad):', 'good');
-  const eq = +prompt('Equity %:', 50);
-  const bo = +prompt('Bonds %:', 40);
-  const go = +prompt('Gold %:', 10);
-  const risk = +prompt('Risk tolerance (0-100):', 60);
-  const horizon = +prompt('Horizon (0-100):', 80);
-  const income = +prompt('Income stability (0-100):', 75);
-  const vol = +prompt('Market volatility (0-100):', 50);
-  const desc = prompt('Description:','');
-  profiles.push({
-    id, quality, rec: { equity: eq, bonds: bo, gold: go },
-    factors: { risk, horizon, income, volatility: vol }, description: desc
-  });
-  saveProfiles(profiles);
-  renderPanel();
-}
-
-function editProfile(id) {
-  const p = profiles.find(x=>x.id===id);
-  if (!p) return alert('Not found');
-  const eq = +prompt('Equity %:', p.rec.equity);
-  const bo = +prompt('Bonds %:', p.rec.bonds);
-  const go = +prompt('Gold %:', p.rec.gold);
-  p.rec = { equity: eq, bonds: bo, gold: go };
-  p.quality = prompt('Quality (good/bad):', p.quality);
-  p.factors.risk = +prompt('Risk:', p.factors.risk);
-  p.factors.horizon = +prompt('Horizon:', p.factors.horizon);
-  p.factors.income = +prompt('Income:', p.factors.income);
-  p.factors.volatility = +prompt('Volatility:', p.factors.volatility);
-  p.description = prompt('Description:', p.description);
-  saveProfiles(profiles);
-  renderPanel();
-}
-
-function deleteProfile(id) {
-  if (!confirm(`Delete profile "${id}"?`)) return;
-  profiles = profiles.filter(p => p.id !== id);
-  saveProfiles(profiles);
-  renderPanel();
-}
-
-// ─── APP RENDERING ─────────────────────────────────────────────────────────
-function renderApp() {
-  const app = document.getElementById('app');
-  if (sess.step === 'intro') app.innerHTML = renderIntro();
-  else if (sess.step === 'rec') app.innerHTML = renderRec();
-  else if (sess.step === 'alloc') app.innerHTML = renderAlloc();
-  else if (sess.step === 'done') app.innerHTML = renderDone();
-  if (sess.step === 'alloc') syncAllocUI();
-}
-
-const dots = active => `<div class="steps">${[0,1,2].map(i=>`<div class="sd ${i<active?'done':i===active?'active':''}"></div>`).join('')}</div>`;
-
-// ─── INTRO ─────────────────────────────────────────────────────────────────
-function renderIntro() {
-  // Show assigned profile description? No, keep blind.
-  return `<div class="card">
-    ${dots(0)}
-    <div class="intro-icon">📊</div>
-    <h2 style="text-align:center;font-size:18px;font-weight:700;color:#222;margin-bottom:8px">Investment Decision Study</h2>
-    <p style="font-size:13px;color:#777;text-align:center;line-height:1.7;margin-bottom:6px">
-      You will be shown a portfolio recommendation from an AI-powered robo-advisor,
-      then decide how to invest your virtual <strong style="color:#222">₹10,000</strong>.
-    </p>
-    <div class="badges">
-      <span class="badge">⏱ ~5 minutes</span>
-      <span class="badge">🔒 Anonymous</span>
-      <span class="badge">💰 ₹10,000 virtual budget</span>
-    </div>
-    <p style="font-size:12px;color:#aaa;text-align:center;margin-bottom:22px">
-      Your risk profile: <strong style="color:#666">Moderate · 8‑year horizon</strong>
-    </p>
-    <button class="btnp" onclick="goRec()">View AI Recommendation →</button>
-  </div>`;
-}
-
-function goRec() {
-  if (!sess.condition) assignParticipant();
-  // Apply any URL overrides first
-  applyUrlParams();
-  // If still not assigned, do it now
-  if (!sess.condition) assignParticipant();
-  sess.step = 'rec';
-  sess.t0 = Date.now();
-  sess.chat = [];
-  sess.qCount = 0;
-  renderApp();
-}
-
-// ─── RECOMMENDATION ────────────────────────────────────────────────────────
-function renderRec() {
-  const r = sess.rec;
-  const recGrid = `
-    <div class="alloc-grid">
-      ${[['equity','Large-cap Equity'],['bonds','Debt / Bonds'],['gold','Gold / Alternatives']].map(([k,n])=>`
-        <div class="ac">
-          <div class="ac-pct">${r[k]}%</div>
-          <div class="ac-name">${n}</div>
-          <div class="ac-amt">₹${aiAmt(k).toLocaleString()}</div>
-        </div>`).join('')}
-    </div>`;
-
-  const factorBars = sess.condition !== 'control' ? `
-    <div class="factors-section">
-      <div class="factors-label">Why this recommendation?</div>
-      ${[
-        ['risk','Risk tolerance',sess.factors.risk],
-        ['horizon','Investment horizon',sess.factors.horizon],
-        ['income','Income stability',sess.factors.income],
-        ['volatility','Market volatility',sess.factors.volatility]
-      ].map(([k,n,v])=>`
-        <div class="fi">
-          <div class="fi-top"><span class="fi-name">${n}</span><span class="fi-val">${v} / 100</span></div>
-          <div class="fi-bg"><div class="fi-fill" style="width:${v}%"></div></div>
-        </div>`).join('')}
-    </div>` : '';
-
-  const chatUI = sess.condition === 'dialogic' ? `
-    <div class="chat-box">
-      <div class="ch"><div class="cdot"></div><div class="ctitle">Ask about this recommendation</div><span style="font-size:11px;color:#aaa;margin-left:auto">AI Assistant</span></div>
-      <div class="cmsgs" id="cmsgs">
-        <div class="cmsg">
-          <div class="cav ai">AI</div>
-          <div class="cbub ai">Hi! I can explain why this portfolio was recommended for you. What would you like to know?</div>
-        </div>
-      </div>
-      <div class="sqs">
-        ${[`Why ${r.equity}% in equity?`,`Why gold at ${r.gold}%?`,`How was risk assessed?`,`What if market drops?`,`Why ${r.bonds}% in bonds?`]
-          .map(q=>`<button class="sq" onclick="sendQ('${q}')">${q}</button>`).join('')}
-      </div>
-      <div class="cinrow">
-        <input type="text" id="cinp" placeholder="Ask anything about this recommendation…" onkeydown="if(event.key==='Enter')sendChat()">
-        <button class="csend" id="csend" onclick="sendChat()">↑</button>
-      </div>
-    </div>` : '';
-
-  return `<div class="card">
-    ${dots(1)}
-    <h2 style="font-size:17px;font-weight:700;color:#222;margin-bottom:4px">AI Portfolio Recommendation</h2>
-    <p style="font-size:13px;color:#999;margin-bottom:18px">Based on your profile: moderate risk, 8‑year horizon.</p>
-    ${recGrid}
-    ${factorBars}
-    ${chatUI}
-    <button class="btnp" style="margin-top:18px" onclick="goAlloc()">Proceed to Allocation →</button>
-  </div>`;
-}
-
-// ─── DIALOGIC CHAT (Strictly bounded) ──────────────────────────────────────
-function sendQ(q) {
-  const inp = document.getElementById('cinp');
-  if (inp) { inp.value = q; sendChat(); }
-}
-
-async function sendChat() {
-  if (!cfg.apiKey.startsWith('gsk_')) {
-    alert('API key missing. Add it in Researcher Settings ⚙️\nFree key: console.groq.com');
-    return;
-  }
-  const inp = document.getElementById('cinp');
-  const send = document.getElementById('csend');
-  const text = inp.value.trim();
-  if (!text) return;
-  inp.value = ''; inp.disabled = true; send.disabled = true;
-  sess.qCount++;
-  sess.chat.push({ role: 'user', content: text });
-
-  const msgs = document.getElementById('cmsgs');
-  msgs.innerHTML += `<div class="cmsg user"><div class="cav user">You</div><div class="cbub user">${text}</div></div>`;
-  msgs.innerHTML += `<div id="typ"><div class="cmsg"><div class="cav ai">AI</div><div class="typing-b"><div class="td"></div><div class="td"></div><div class="td"></div></div></div></div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-
-  const strictSys = `You are a robo-advisor EXPLANATION assistant in a research study.
-
-Your ONLY job is to explain WHY the following portfolio was recommended to the participant. You must NEVER suggest changes, alternatives, or give general financial advice. You must NEVER discuss other portfolios or hypothetical scenarios.
-
-Current recommended portfolio:
-- ${sess.rec.equity}% Large-cap Equity (₹${aiAmt('equity').toLocaleString()})
-- ${sess.rec.bonds}% Debt/Bonds (₹${aiAmt('bonds').toLocaleString()})
-- ${sess.rec.gold}% Gold/Alternatives (₹${aiAmt('gold').toLocaleString()})
-
-The recommendation was generated based on these factors (scores out of 100):
-- Risk tolerance: ${sess.factors.risk}
-- Investment horizon: ${sess.factors.horizon}
-- Income stability: ${sess.factors.income}
-- Market volatility: ${sess.factors.volatility}
-
-RULES:
-1. Only answer questions that relate to EXPLAINING this exact recommendation.
-2. If a question asks for changes, alternatives, or "what if I did X instead", reply: "I'm only able to explain this specific recommendation. I can't offer alternatives."
-3. If the question is off-topic (e.g., stock tips, crypto, personal finance), reply: "I can only discuss the factors behind this portfolio."
-4. Keep answers to 2–3 sentences.
-5. Use simple, non-technical language.`;
-
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.apiKey}` },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 200,
-        messages: [{ role: 'system', content: strictSys }, ...sess.chat]
-      })
-    });
-    const data = await res.json();
-    const reply = data.error ? `Error: ${data.error.message}` : (data.choices?.[0]?.message?.content || 'No response.');
-    sess.chat.push({ role: 'assistant', content: reply });
-    document.getElementById('typ')?.remove();
-    msgs.innerHTML += `<div class="cmsg"><div class="cav ai">AI</div><div class="cbub ai">${reply}</div></div>`;
-  } catch (e) {
-    document.getElementById('typ')?.remove();
-    msgs.innerHTML += `<div class="cmsg"><div class="cav ai">AI</div><div class="cbub ai">Network error. Check your API key in ⚙️ settings.</div></div>`;
-  }
-  inp.disabled = false; send.disabled = false;
-  msgs.scrollTop = msgs.scrollHeight;
-  inp.focus();
-}
-
-// ─── ALLOCATION ────────────────────────────────────────────────────────────
-function goAlloc() {
-  sess.alloc = {
-    equity: aiAmt('equity'),
-    bonds:  aiAmt('bonds'),
-    gold:   aiAmt('gold')
-  };
-  const sum = sess.alloc.equity + sess.alloc.bonds + sess.alloc.gold;
-  sess.alloc.equity += (10000 - sum);
-  sess.tAlloc = Date.now();
-  sess.step = 'alloc';
-  renderApp();
-}
-
-function renderAlloc() {
-  return `<div class="card">
-    ${dots(2)}
-    <h2 style="font-size:17px;font-weight:700;color:#222;margin-bottom:6px">Your Allocation Decision</h2>
-    <p style="font-size:13px;color:#999;margin-bottom:18px;line-height:1.6">
-      You have <strong style="color:#222">₹10,000</strong> to invest. Distribute it across the three asset classes below.
-      The AI recommendation is shown as a reference — you can follow it or decide differently.
-    </p>
-
-    ${[
-      ['equity','Large-cap Equity','📈'],
-      ['bonds','Debt / Bonds','🏛️'],
-      ['gold','Gold / Alternatives','🥇']
-    ].map(([k,n,ico]) => `
-      <div class="arow" id="row_${k}">
-        <div class="atop">
-          <span class="aname">${ico} ${n}</span>
-          <span class="aisug">AI: ₹${aiAmt(k).toLocaleString()} (${sess.rec[k]}%)</span>
-        </div>
-        <div class="acontrols">
-          <button class="cbtn" onclick="adj('${k}',-500)">−</button>
-          <div class="ainp-wrap">
-            <span class="ainp-sym">₹</span>
-            <input class="ainp" type="number" min="0" max="10000" step="100" id="inp_${k}" value="${sess.alloc[k]}" oninput="setV('${k}',+this.value)">
-          </div>
-          <button class="cbtn" onclick="adj('${k}',500)">+</button>
-        </div>
-        <div class="abar-wrap" style="margin-top:10px">
-          <div class="abar" id="bar_${k}" style="width:${sess.alloc[k]/100}%"></div>
-        </div>
-      </div>`).join('')}
-
-    <div class="total-row">
-      <span class="total-label">Total allocated</span>
-      <div style="text-align:right">
-        <div class="total-num tok" id="tnum">₹0</div>
-        <div class="total-msg" id="tmsg"></div>
-      </div>
-    </div>
-
-    <button class="btno" onclick="resetAI()">↺ Reset to AI recommendation</button>
-    <button class="btnp" id="sbtn" onclick="submitAlloc()" disabled>Submit My Decision ✓</button>
-  </div>`;
-}
-
-function syncAllocUI() { updateTotal(); }
-
-function adj(k, delta) {
-  setV(k, Math.max(0, Math.min(10000, sess.alloc[k] + delta)));
-}
-
-function setV(k, v) {
-  v = Math.max(0, Math.min(10000, Math.round(v / 100) * 100));
-  if (isNaN(v)) v = 0;
-  sess.alloc[k] = v;
-  const inp = document.getElementById('inp_'+k);
-  if (inp) inp.value = v;
-  const bar = document.getElementById('bar_'+k);
-  if (bar) bar.style.width = (v/100)+'%';
-  updateTotal();
-}
-
-function updateTotal() {
-  const a = sess.alloc;
-  const t = a.equity + a.bonds + a.gold;
-  const tn = document.getElementById('tnum');
-  const tm = document.getElementById('tmsg');
-  const sb = document.getElementById('sbtn');
-  if (!tn) return;
-  tn.textContent = '₹' + t.toLocaleString();
-  tn.className = 'total-num ' + (t===10000?'tok':t>10000?'tover':'tunder');
-  if (t === 10000) {
-    tm.textContent = '✓ Ready to submit';
-    tm.style.color = '#22c55e';
-  } else if (t > 10000) {
-    tm.textContent = `₹${(t-10000).toLocaleString()} over budget — reduce`;
-    tm.style.color = '#ef4444';
+function checkPassword(){
+  const pw = document.getElementById('pi').value;
+  if(pw === PANEL_PASSWORD){
+    auth = true; renderPanel();
   } else {
-    tm.textContent = `₹${(10000-t).toLocaleString()} remaining — allocate`;
-    tm.style.color = '#f59e0b';
+    alert('Incorrect password');
   }
-  if (sb) sb.disabled = t !== 10000;
-  ['equity','bonds','gold'].forEach(k => {
-    const row = document.getElementById('row_'+k);
-    if (row) row.classList.toggle('over', sess.alloc[k] > 7000);
-  });
 }
 
-function resetAI() {
-  sess.alloc = { equity: aiAmt('equity'), bonds: aiAmt('bonds'), gold: aiAmt('gold') };
-  const sum = sess.alloc.equity + sess.alloc.bonds + sess.alloc.gold;
-  sess.alloc.equity += (10000 - sum);
-  ['equity','bonds','gold'].forEach(k => {
-    const inp = document.getElementById('inp_'+k);
-    if (inp) inp.value = sess.alloc[k];
-    const bar = document.getElementById('bar_'+k);
-    if (bar) bar.style.width = (sess.alloc[k]/100)+'%';
-  });
-  updateTotal();
+function addProfile(){
+  const id = prompt('Profile ID:');
+  if(!id) return;
+  const qual = prompt('Quality (good/bad):','good');
+  const eq = +prompt('Equity %:',50);
+  const bo = +prompt('Bonds %:',40);
+  const go = +prompt('Gold %:',10);
+  const horizon = +prompt('Investment horizon (years):',8);
+  const risk = +prompt('Risk tolerance (0-100):',60);
+  const inc = +prompt('Income stability (0-100):',75);
+  const vol = +prompt('Market volatility (0-100):',50);
+  const newProf = {id,quality:qual,rec:{equity:eq,bonds:bo,gold:go},factors:{risk,income:inc,volatility:vol},horizonYears:horizon};
+  updateHorizonScore(newProf);
+  profiles.push(newProf);
+  saveProfilesToStorage();
+  renderPanel();
+}
+function editProfile(id){
+  const p = profiles.find(x=>x.id===id); if(!p) return;
+  p.quality = prompt('Quality (good/bad):',p.quality) || p.quality;
+  p.rec.equity = +prompt('Equity %:',p.rec.equity);
+  p.rec.bonds = +prompt('Bonds %:',p.rec.bonds);
+  p.rec.gold = +prompt('Gold %:',p.rec.gold);
+  p.horizonYears = +prompt('Horizon (years):',p.horizonYears);
+  p.factors.risk = +prompt('Risk tolerance (0-100):',p.factors.risk);
+  p.factors.income = +prompt('Income stability (0-100):',p.factors.income);
+  p.factors.volatility = +prompt('Market volatility (0-100):',p.factors.volatility);
+  updateHorizonScore(p);
+  saveProfilesToStorage();
+  renderPanel();
+}
+function deleteProfile(id){
+  if(confirm(`Delete profile "${id}"?`)){
+    profiles = profiles.filter(p=>p.id!==id);
+    saveProfilesToStorage();
+    renderPanel();
+  }
 }
 
-// ─── SUBMIT & DONE ─────────────────────────────────────────────────────────
-function submitAlloc() {
-  const a = sess.alloc;
-  const dev = Math.round(
-    (Math.abs(a.equity - aiAmt('equity')) + Math.abs(a.bonds - aiAmt('bonds')) + Math.abs(a.gold - aiAmt('gold')))
-    / 10000 * 100
-  );
-
-  const record = {
-    timestamp: new Date().toISOString(),
-    condition: sess.condition,
-    rec_quality: sess.recQuality,
-    profile_id: sess.profileId,
-    equity: a.equity, bonds: a.bonds, gold: a.gold,
-    ai_equity: aiAmt('equity'), ai_bonds: aiAmt('bonds'), ai_gold: aiAmt('gold'),
-    deviation: dev,
-    questions: sess.qCount,
-    rec_view_sec: Math.round((sess.tAlloc - sess.t0) / 1000),
-    alloc_sec: Math.round((Date.now() - sess.tAlloc) / 1000)
-  };
-  responses.push(record);
-  saveResp();
-  sess.devData = { dev, a };
-  sess.step = 'done';
-  renderApp();
-}
-
-function renderDone() {
-  const { dev, a } = sess.devData;
-  return `<div class="card" style="text-align:center">
-    <div class="done-icon">✅</div>
-    <h2 style="font-size:18px;font-weight:700;color:#222;margin-bottom:8px">Thank you!</h2>
-    <p style="font-size:13px;color:#888;line-height:1.7;margin-bottom:6px">Your decision has been recorded.</p>
-    <div class="sum-grid">
-      <div class="sc"><div class="sc-amt">₹${a.equity.toLocaleString()}</div><div class="sc-name">Large-cap Equity</div></div>
-      <div class="sc"><div class="sc-amt">₹${a.bonds.toLocaleString()}</div><div class="sc-name">Debt / Bonds</div></div>
-      <div class="sc"><div class="sc-amt">₹${a.gold.toLocaleString()}</div><div class="sc-name">Gold / Alt.</div></div>
-    </div>
-    <div class="devbox ${dev===0?'perfect':'partial'}">
-      ${dev === 0
-        ? '✓ You followed the AI recommendation exactly.'
-        : `Your allocation differed from the AI recommendation by <strong>${dev}%</strong> of the total portfolio.
-           <br><span style="font-size:12px;opacity:.8">This is your <em>trust score</em> — lower deviation indicates higher trust in the AI.</span>`}
-    </div>
-    <p style="font-size:12px;color:#bbb;margin-top:14px">Response #${responses.length} recorded.</p>
-    <button class="btno" style="margin-top:4px" onclick="restart()">↺ Start new participant session</button>
-  </div>`;
-}
-
-function restart() {
-  sess = {
-    step: 'intro',
-    condition: null, profile: null, rec: null, factors: null,
-    recQuality: null, profileId: null,
-    chat: [], qCount: 0, t0: null, tAlloc: null,
-    alloc: { equity:0, bonds:0, gold:0 }, devData: null
-  };
-  renderApp();
-}
-
-// ─── EXPORT ────────────────────────────────────────────────────────────────
-function exportCSV() {
-  if (!responses.length) { alert('No responses yet.'); return; }
+function exportCSV(){
+  if(!responses.length){ alert('No data'); return; }
   const keys = Object.keys(responses[0]);
-  const csv = [keys.join(','), ...responses.map(r => keys.map(k => JSON.stringify(r[k]||'')).join(','))].join('\n');
+  const csv = [keys.join(','), ...responses.map(r=>keys.map(k=>JSON.stringify(r[k]||'')).join(','))].join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = `xai_responses_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
-
-function clearData() {
-  if (!confirm('Delete all response data?')) return;
-  responses = []; saveResp(); renderPanel();
+function clearData(){
+  if(confirm('Delete all responses?')){
+    responses = []; saveResp(); renderPanel();
+  }
 }
 
-// ─── INIT ──────────────────────────────────────────────────────────────────
-// On load, apply URL params if present, but wait for participant start
-window.addEventListener('DOMContentLoaded', () => {
-  renderApp();
-});
+// ─── INIT ─────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', renderApp);
 </script>
 </body>
 </html>
