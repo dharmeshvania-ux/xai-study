@@ -397,6 +397,7 @@ async function sendChat() {
   const strictSys = `You are a robo-advisor EXPLANATION assistant. ONLY explain why this portfolio (${sess.rec.equity}% equity, ${sess.rec.bonds}% bonds, ${sess.rec.gold}% gold) was recommended. NEVER suggest changes. Keep answers 2-3 sentences.`;
 
   try {
+    // ✅ SENDING AS FORM DATA (NO CORS PREFLIGHT)
     const formData = new URLSearchParams();
     formData.append('action', 'chat');
     formData.append('messages', JSON.stringify(sess.chat));
