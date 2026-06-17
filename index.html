@@ -186,7 +186,8 @@ const saveCfg = () => localStorage.setItem('xai_cfg', JSON.stringify(cfg));
 const saveResp = () => localStorage.setItem('xai_resp', JSON.stringify(responses));
 
 // ─── YOUR GOOGLE SCRIPT URL ────────────────────────────────────────────────
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ2-aWr-d2BZb4gveZSo4ZXMF6BGxuuQmh6S3vsc2tI6JiFAsTc-GEOqonEh1e-T7R2g/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_diNKkXZl1_LTVD9xCjOidBTR1TZzC9MwXfe0x-t5t5-bB3AsAQNr0i6l7PyL7HP8fQ/exec
+';
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────
 const aiAmt = (k) => Math.round((sess.rec?.[k] || 0) / 100 * 10000);
@@ -397,7 +398,7 @@ async function sendChat() {
   const strictSys = `You are a robo-advisor EXPLANATION assistant. ONLY explain why this portfolio (${sess.rec.equity}% equity, ${sess.rec.bonds}% bonds, ${sess.rec.gold}% gold) was recommended. NEVER suggest changes. Keep answers 2-3 sentences.`;
 
   try {
-    // ✅ SENDING AS FORM DATA (NO CORS PREFLIGHT)
+    // CRITICAL: Sending as Form Data to avoid CORS preflight
     const formData = new URLSearchParams();
     formData.append('action', 'chat');
     formData.append('messages', JSON.stringify(sess.chat));
