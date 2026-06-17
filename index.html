@@ -152,7 +152,11 @@ input[type=range]{width:100%;accent-color:#3b82f6}
 </head>
 <body>
 
-<button class="gear" onclick="openPanel()" title="Researcher Settings">⚙️</button>
+<!-- ⚠️ GEAR BUTTON IS HIDDEN BY DEFAULT. ONLY SHOWS IF ?researcher=true -->
+<div id="researcher-tools" style="display: none;">
+    <button class="gear" onclick="openPanel()" title="Researcher Settings">⚙️</button>
+</div>
+
 <div class="overlay" id="overlay" onclick="closePanel()"></div>
 <div class="panel" id="panel"><div id="panel-body"></div></div>
 <div id="app"></div>
@@ -203,13 +207,11 @@ let sess = {
   t0: null,
   tAlloc: null,
   alloc: { equity: 0, bonds: 0, gold: 0 },
-  devData: null,
-  apiKey: ''              // stored per session (also in localStorage for convenience)
+  devData: null
 };
 
 // Global config (researcher overrides) – stored in localStorage
 let cfg = JSON.parse(localStorage.getItem('xai_cfg') || '{}');
-if (!cfg.apiKey) cfg.apiKey = '';
 if (!cfg.overrideCondition) cfg.overrideCondition = 'random'; // 'random', 'control', 'feature', 'dialogic'
 if (!cfg.profilePool) cfg.profilePool = 'all'; // 'all', 'good', 'bad', or specific id
 
@@ -219,6 +221,10 @@ let auth = false;
 
 const saveCfg = () => localStorage.setItem('xai_cfg', JSON.stringify(cfg));
 const saveResp = () => localStorage.setItem('xai_resp', JSON.stringify(responses));
+
+// ─── YOUR GOOGLE SCRIPT URL (For both data saving AND chat proxy) ────────
+// ⚠️ UPDATE THIS WITH YOUR ACTUAL DEPLOYED URL ⚠️
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ2-aWr-d2BZb4gveZSo4ZXMF6BGxuuQmh6S3vsc2tI6JiFAsTc-GEOqonEh1e-T7R2g/exec';
 
 // ─── HELPER: AI recommended amounts based on current session rec ───────────
 const aiAmt = (k) => Math.round((sess.rec?.[k] || 0) / 100 * 10000);
@@ -298,8 +304,6 @@ function renderPanel() {
     return;
   }
 
-  const poolLabel = cfg.profilePool === 'all' ? 'All profiles' : cfg.profilePool === 'good' ? 'Good only' : cfg.profilePool === 'bad' ? 'Bad only' : `Profile: ${cfg.profilePool}`;
-
   el.innerHTML = `
     <div class="ph"><h2>⚙️ Researcher Panel</h2><button class="xbtn" onclick="closePanel()">✕</button></div>
 
@@ -339,16 +343,6 @@ function renderPanel() {
           </span>
         </div>`).join('')}</div>
       <button class="exp-btn" style="margin-top:6px;" onclick="addProfile()">+ Add Profile</button>
-    </div>
-
-    <!-- API Key (dialogic only, but shown always) -->
-    <div class="ps">
-      <h3>Groq API Key</h3>
-      <input class="api-inp" type="password" placeholder="gsk_..." value="${cfg.apiKey}"
-        oninput="cfg.apiKey=this.value;saveCfg();">
-      <span class="api-status ${cfg.apiKey.startsWith('gsk_')?'api-ok':'api-no'}" id="api-st">
-        ${cfg.apiKey.startsWith('gsk_')?'Key set ✓':'Not set — get free key at console.groq.com'}
-      </span>
     </div>
 
     <!-- Results -->
@@ -445,7 +439,6 @@ const dots = active => `<div class="steps">${[0,1,2].map(i=>`<div class="sd ${i<
 
 // ─── INTRO ─────────────────────────────────────────────────────────────────
 function renderIntro() {
-  // Show assigned profile description? No, keep blind.
   return `<div class="card">
     ${dots(0)}
     <div class="intro-icon">📊</div>
@@ -468,9 +461,7 @@ function renderIntro() {
 
 function goRec() {
   if (!sess.condition) assignParticipant();
-  // Apply any URL overrides first
   applyUrlParams();
-  // If still not assigned, do it now
   if (!sess.condition) assignParticipant();
   sess.step = 'rec';
   sess.t0 = Date.now();
@@ -537,21 +528,18 @@ function renderRec() {
   </div>`;
 }
 
-// ─── DIALOGIC CHAT (Strictly bounded) ──────────────────────────────────────
+// ─── DIALOGIC CHAT (CALLS GOOGLE PROXY) ──────────────────────────────────
 function sendQ(q) {
   const inp = document.getElementById('cinp');
   if (inp) { inp.value = q; sendChat(); }
 }
 
 async function sendChat() {
-  if (!cfg.apiKey.startsWith('gsk_')) {
-    alert('API key missing. Add it in Researcher Settings ⚙️\nFree key: console.groq.com');
-    return;
-  }
   const inp = document.getElementById('cinp');
   const send = document.getElementById('csend');
   const text = inp.value.trim();
   if (!text) return;
+  
   inp.value = ''; inp.disabled = true; send.disabled = true;
   sess.qCount++;
   sess.chat.push({ role: 'user', content: text });
@@ -584,23 +572,26 @@ RULES:
 5. Use simple, non-technical language.`;
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // Send the chat request to your Google Script proxy
+    const res = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.apiKey}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 200,
-        messages: [{ role: 'system', content: strictSys }, ...sess.chat]
+        action: 'chat',
+        messages: sess.chat,
+        systemPrompt: strictSys
       })
     });
+    
     const data = await res.json();
-    const reply = data.error ? `Error: ${data.error.message}` : (data.choices?.[0]?.message?.content || 'No response.');
+    const reply = data.status === 'success' ? data.reply : 'Error: ' + (data.message || 'Unknown error');
+
     sess.chat.push({ role: 'assistant', content: reply });
     document.getElementById('typ')?.remove();
     msgs.innerHTML += `<div class="cmsg"><div class="cav ai">AI</div><div class="cbub ai">${reply}</div></div>`;
   } catch (e) {
     document.getElementById('typ')?.remove();
-    msgs.innerHTML += `<div class="cmsg"><div class="cav ai">AI</div><div class="cbub ai">Network error. Check your API key in ⚙️ settings.</div></div>`;
+    msgs.innerHTML += `<div class="cmsg"><div class="cav ai">AI</div><div class="cbub ai">Network error. Please try again.</div></div>`;
   }
   inp.disabled = false; send.disabled = false;
   msgs.scrollTop = msgs.scrollHeight;
@@ -743,10 +734,6 @@ function submitAlloc() {
     alloc_sec: Math.round((Date.now() - sess.tAlloc) / 1000)
   };
 
-  // ─── CRITICAL: SEND TO GOOGLE DRIVE ─────────────────────────────────
-  // ⚠️ REPLACE THE URL BELOW WITH YOUR ACTUAL GOOGLE SCRIPT URL ⚠️
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUbzGlPgAu_1CO5daiECS36QKeZbxAotWBA_FjXM6YHme2TtarHNaW_bMScbhySHC3_g/exec';
-
   const btn = document.getElementById('sbtn');
   if (btn) {
     btn.innerText = 'Saving...';
@@ -755,12 +742,11 @@ function submitAlloc() {
 
   fetch(GOOGLE_SCRIPT_URL, {
     method: 'POST',
-    mode: 'no-cors', // Required for cross-origin requests to Google
+    mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(record)
   })
   .then(() => {
-    // Save locally as backup (just in case)
     responses.push(record);
     saveResp();
     sess.devData = { dev, a };
@@ -770,7 +756,6 @@ function submitAlloc() {
   .catch((error) => {
     console.error('Google Drive save failed, saving locally only:', error);
     alert('Network issue. Your data has been saved locally. Please contact the researcher.');
-    // Fallback: save to localStorage so they don't lose data
     responses.push(record);
     saveResp();
     sess.devData = { dev, a };
@@ -837,6 +822,11 @@ function clearData() {
 
 // ─── INIT ──────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  // Show the researcher gear ONLY if the secret URL param is present
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('researcher') === 'true') {
+    document.getElementById('researcher-tools').style.display = 'block';
+  }
   renderApp();
 });
 </script>
