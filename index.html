@@ -186,8 +186,7 @@ const saveCfg = () => localStorage.setItem('xai_cfg', JSON.stringify(cfg));
 const saveResp = () => localStorage.setItem('xai_resp', JSON.stringify(responses));
 
 // ─── YOUR GOOGLE SCRIPT URL ────────────────────────────────────────────────
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_diNKkXZl1_LTVD9xCjOidBTR1TZzC9MwXfe0x-t5t5-bB3AsAQNr0i6l7PyL7HP8fQ/exec
-';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHRuuDUisGyyXWPYkLTfihfD5HsVJiUWqeYM30-qorwPY353iHlz4zL_Rka9PJ3gOM_w/exec';
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────
 const aiAmt = (k) => Math.round((sess.rec?.[k] || 0) / 100 * 10000);
