@@ -378,27 +378,52 @@ function renderRec() {
 // ─── CHAT (Calls Google Proxy) ────────────────────────────────────────────
 function sendQ(q) { const inp = document.getElementById('cinp'); if(inp) { inp.value = q; sendChat(); } }
 async function sendChat() {
-  const inp = document.getElementById('cinp'), send = document.getElementById('csend');
-  const text = inp.value.trim(); if(!text) return;
-  inp.value = ''; inp.disabled = true; send.disabled = true; sess.qCount++;
+  const inp = document.getElementById('cinp');
+  const send = document.getElementById('csend');
+  const text = inp.value.trim();
+  if (!text) return;
+
+  inp.value = '';
+  inp.disabled = true;
+  send.disabled = true;
+  sess.qCount++;
   sess.chat.push({ role: 'user', content: text });
+
   const msgs = document.getElementById('cmsgs');
   msgs.innerHTML += `<div class="cmsg user"><div class="cav user">You</div><div class="cbub user">${text}</div></div>`;
   msgs.innerHTML += `<div id="typ"><div class="cmsg"><div class="cav ai">AI</div><div class="typing-b"><div class="td"></div><div class="td"></div><div class="td"></div></div></div></div>`;
   msgs.scrollTop = msgs.scrollHeight;
+
   const strictSys = `You are a robo-advisor EXPLANATION assistant. ONLY explain why this portfolio (${sess.rec.equity}% equity, ${sess.rec.bonds}% bonds, ${sess.rec.gold}% gold) was recommended. NEVER suggest changes. Keep answers 2-3 sentences.`;
+
   try {
+    // --- CHANGE HERE: Use Form Data instead of JSON ---
+    const formData = new URLSearchParams();
+    formData.append('action', 'chat');
+    formData.append('messages', JSON.stringify(sess.chat));
+    formData.append('systemPrompt', strictSys);
+
     const res = await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'chat', messages: sess.chat, systemPrompt: strictSys })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData
     });
+
     const data = await res.json();
-    const reply = data.status === 'success' ? data.reply : 'Error.';
+    const reply = data.status === 'success' ? data.reply : 'Error: ' + (data.message || 'Unknown');
+
     sess.chat.push({ role: 'assistant', content: reply });
     document.getElementById('typ')?.remove();
     msgs.innerHTML += `<div class="cmsg"><div class="cav ai">AI</div><div class="cbub ai">${reply}</div></div>`;
-  } catch(e) { document.getElementById('typ')?.remove(); msgs.innerHTML += `<div class="cmsg"><div class="cav ai">AI</div><div class="cbub ai">Network error.</div></div>`; }
-  inp.disabled = false; send.disabled = false; msgs.scrollTop = msgs.scrollHeight; inp.focus();
+  } catch (e) {
+    document.getElementById('typ')?.remove();
+    msgs.innerHTML += `<div class="cmsg"><div class="cav ai">AI</div><div class="cbub ai">Network error. Please try again.</div></div>`;
+    console.error('Chat error:', e);
+  }
+  inp.disabled = false;
+  send.disabled = false;
+  msgs.scrollTop = msgs.scrollHeight;
+  inp.focus();
 }
 
 // ─── ALLOCATION ────────────────────────────────────────────────────────────
